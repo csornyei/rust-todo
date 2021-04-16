@@ -119,7 +119,33 @@ fn main() {
             };
         }
         "not-complete" => {
-            println!("ToDo is not done!")
+            let todo_selector = args[2].clone();
+            match todo_selector.parse::<usize>() {
+                Ok(idx) => {
+                    parsed_todos[idx].not_done();
+                    match write_to_file(&parsed_todos, &path) {
+                        Ok(()) => println!("ToDo not completed!"),
+                        Err(why) => println!("Can't add ToDo! {}", why),
+                    };
+                }
+                Err(_) => {
+                    let mut found_todo: Option<usize> = None;
+                    for (i, todo) in parsed_todos.iter().enumerate() {
+                        if todo.text == todo_selector {
+                            found_todo = Some(i);
+                        }
+                    }
+                    if let Some(idx) = found_todo {
+                        parsed_todos[idx].not_done();
+                        match write_to_file(&parsed_todos, &path) {
+                            Ok(()) => println!("ToDo not completed!"),
+                            Err(why) => println!("Can't add ToDo! {}", why),
+                        };
+                    } else {
+                        println!("No ToDo found!");
+                    }
+                }
+            };
         }
         _ => println!("Not recognized command! Try something else!"),
     }

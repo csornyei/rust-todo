@@ -20,6 +20,10 @@ impl Todo {
         self.done = true;
     }
 
+    pub fn not_done(&mut self) {
+        self.done = false;
+    }
+
     pub fn is_done(&self) -> bool {
         self.done
     }
