@@ -1,8 +1,7 @@
-use dirs;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
-use std::path;
+use std::path::{Path, PathBuf};
 mod todo;
 
 const TODO_FOLDER: &str = ".rust_todo";
@@ -67,13 +66,13 @@ fn main() {
                         not_done_todos.push((i, todo));
                     }
                 }
-                if done_todos.len() > 0 {
+                if !done_todos.is_empty() {
                     println!("--- DONE ---");
                     for todo in done_todos {
                         println!("{}: {}", todo.0, todo.1);
                     }
                 }
-                if not_done_todos.len() > 0 {
+                if !not_done_todos.is_empty() {
                     println!("--- NOT DONE ---");
                     for todo in not_done_todos {
                         println!("{}: {}", todo.0, todo.1);
@@ -151,13 +150,13 @@ fn main() {
     }
 }
 
-fn parse_json(input: &String) -> serde_json::Result<std::vec::Vec<todo::Todo>> {
+fn parse_json(input: &str) -> serde_json::Result<std::vec::Vec<todo::Todo>> {
     let todos: Vec<todo::Todo> = serde_json::from_str(input)?;
 
     Ok(todos)
 }
 
-fn create_dir() -> Result<path::PathBuf, std::io::Error> {
+fn create_dir() -> Result<PathBuf, std::io::Error> {
     let home = match dirs::home_dir() {
         None => panic!("Home directory not found!"),
         Some(home) => home,
@@ -169,23 +168,23 @@ fn create_dir() -> Result<path::PathBuf, std::io::Error> {
     Ok(dir_path)
 }
 
-fn create_file(dir_path: path::PathBuf) -> Result<path::PathBuf, std::io::Error> {
+fn create_file(dir_path: PathBuf) -> Result<PathBuf, std::io::Error> {
     let path = dir_path.join(TODO_FILENAME);
     if !path.exists() {
         let mut file = File::create(&path)?;
-        file.write("[]".as_bytes())?;
+        file.write_all("[]".as_bytes())?;
     }
 
     Ok(path)
 }
 
-fn get_todo_file_path() -> Result<path::PathBuf, std::io::Error> {
+fn get_todo_file_path() -> Result<PathBuf, std::io::Error> {
     let dir_path = create_dir()?;
     let path = create_file(dir_path)?;
     Ok(path)
 }
 
-fn read_file_content(file_path: &path::PathBuf) -> Result<std::string::String, std::io::Error> {
+fn read_file_content(file_path: &Path) -> Result<std::string::String, std::io::Error> {
     let mut file = File::open(file_path)?;
 
     let mut content = String::new();
@@ -194,12 +193,9 @@ fn read_file_content(file_path: &path::PathBuf) -> Result<std::string::String, s
     Ok(content)
 }
 
-fn write_to_file(
-    content: &Vec<todo::Todo>,
-    file_path: &path::PathBuf,
-) -> Result<(), std::io::Error> {
+fn write_to_file(content: &[todo::Todo], file_path: &Path) -> Result<(), std::io::Error> {
     let new_todos = serde_json::to_string(content)?;
     let mut file = File::create(file_path)?;
-    file.write(new_todos.as_bytes())?;
+    file.write_all(new_todos.as_bytes())?;
     Ok(())
 }
