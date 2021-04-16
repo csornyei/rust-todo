@@ -44,39 +44,39 @@ fn main() {
             }
             if show_done ^ show_not_done {
                 if show_done {
-                    for todo in &parsed_todos {
+                    for (i, todo) in parsed_todos.iter().enumerate() {
                         if todo.is_done() {
-                            println!("{}", todo);
+                            println!("{}: {}", i, todo);
                         }
                     }
                 }
                 if show_not_done {
-                    for todo in &parsed_todos {
+                    for (i, todo) in parsed_todos.iter().enumerate() {
                         if !todo.is_done() {
-                            println!("{}", todo);
+                            println!("{}: {}", i, todo);
                         }
                     }
                 }
             } else {
-                let mut not_done_todos: Vec<&todo::Todo> = vec![];
-                let mut done_todos: Vec<&todo::Todo> = vec![];
-                for todo in &parsed_todos {
+                let mut not_done_todos: Vec<(usize, &todo::Todo)> = vec![];
+                let mut done_todos: Vec<(usize, &todo::Todo)> = vec![];
+                for (i, todo) in parsed_todos.iter().enumerate() {
                     if todo.is_done() {
-                        done_todos.push(todo);
+                        done_todos.push((i, todo));
                     } else {
-                        not_done_todos.push(todo);
+                        not_done_todos.push((i, todo));
                     }
                 }
                 if done_todos.len() > 0 {
                     println!("--- DONE ---");
-                    for todo in &done_todos {
-                        println!("{}", todo);
+                    for todo in done_todos {
+                        println!("{}: {}", todo.0, todo.1);
                     }
                 }
                 if not_done_todos.len() > 0 {
                     println!("--- NOT DONE ---");
-                    for todo in &not_done_todos {
-                        println!("{}", todo);
+                    for todo in not_done_todos {
+                        println!("{}: {}", todo.0, todo.1);
                     }
                 }
             }
@@ -90,7 +90,33 @@ fn main() {
             };
         }
         "complete" => {
-            println!("Completing a ToDo")
+            let todo_selector = args[2].clone();
+            match todo_selector.parse::<usize>() {
+                Ok(idx) => {
+                    parsed_todos[idx].done();
+                    match write_to_file(&parsed_todos, &path) {
+                        Ok(()) => println!("ToDo completed!"),
+                        Err(why) => println!("Can't add ToDo! {}", why),
+                    };
+                }
+                Err(_) => {
+                    let mut found_todo: Option<usize> = None;
+                    for (i, todo) in parsed_todos.iter().enumerate() {
+                        if todo.text == todo_selector {
+                            found_todo = Some(i);
+                        }
+                    }
+                    if let Some(idx) = found_todo {
+                        parsed_todos[idx].done();
+                        match write_to_file(&parsed_todos, &path) {
+                            Ok(()) => println!("ToDo completed!"),
+                            Err(why) => println!("Can't add ToDo! {}", why),
+                        };
+                    } else {
+                        println!("No ToDo found!");
+                    }
+                }
+            };
         }
         "not-complete" => {
             println!("ToDo is not done!")

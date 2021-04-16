@@ -4,7 +4,7 @@ use std::fmt;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Todo {
-    text: String,
+    pub text: String,
     done: bool,
 }
 
