@@ -20,7 +20,7 @@ fn main() {
         Ok(content) => content,
     };
 
-    let parsed_todos = match parse_json(&todo_file_content) {
+    let mut parsed_todos = match parse_json(&todo_file_content) {
         Err(why) => {
             println!("Can't parse {}", why);
             return;
@@ -82,7 +82,12 @@ fn main() {
             }
         }
         "add" => {
-            println!("Adding new ToDo!")
+            let todo_text = args[2].clone();
+            parsed_todos.push(todo::Todo::new(&todo_text));
+            match write_to_file(&parsed_todos, &path) {
+                Ok(()) => println!("ToDo added!"),
+                Err(why) => println!("Can't add ToDo! {}", why),
+            };
         }
         "complete" => {
             println!("Completing a ToDo")
@@ -135,4 +140,14 @@ fn read_file_content(file_path: &path::PathBuf) -> Result<std::string::String, s
     file.read_to_string(&mut content)?;
 
     Ok(content)
+}
+
+fn write_to_file(
+    content: &Vec<todo::Todo>,
+    file_path: &path::PathBuf,
+) -> Result<(), std::io::Error> {
+    let new_todos = serde_json::to_string(content)?;
+    let mut file = File::create(file_path)?;
+    file.write(new_todos.as_bytes())?;
+    Ok(())
 }

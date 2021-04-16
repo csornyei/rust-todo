@@ -16,7 +16,7 @@ impl Todo {
         }
     }
 
-    pub fn complete(&mut self) {
+    pub fn done(&mut self) {
         self.done = true;
     }
 
