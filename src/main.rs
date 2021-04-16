@@ -9,12 +9,8 @@ const TODO_FOLDER: &str = ".rust_todo";
 const TODO_FILENAME: &str = "todos.json";
 
 fn main() {
-    let dir_path = match create_dir() {
-        Err(why) => panic!("Can't create directory! {}", why),
-        Ok(dir_path) => dir_path,
-    };
-    let path = match create_file(dir_path) {
-        Err(why) => panic!("Can't create file! {}", why),
+    let path = match get_todo_file_path() {
+        Err(why) => panic!("Can't get ToDos file! {}", why),
         Ok(path) => path,
     };
     let path_display = path.display();
@@ -31,7 +27,71 @@ fn main() {
         }
         Ok(parsed) => parsed,
     };
-    println!("{:?}", parsed_todos);
+
+    let args: Vec<String> = std::env::args().collect();
+
+    let main_command = args[1].clone();
+
+    match main_command.as_str() {
+        "show" => {
+            let mut show_done = false;
+            let mut show_not_done = false;
+            if args.contains(&String::from("--done")) || args.contains(&String::from("-d")) {
+                show_done = true;
+            }
+            if args.contains(&String::from("--not-done")) || args.contains(&String::from("-n")) {
+                show_not_done = true;
+            }
+            if show_done ^ show_not_done {
+                if show_done {
+                    for todo in &parsed_todos {
+                        if todo.is_done() {
+                            println!("{}", todo);
+                        }
+                    }
+                }
+                if show_not_done {
+                    for todo in &parsed_todos {
+                        if !todo.is_done() {
+                            println!("{}", todo);
+                        }
+                    }
+                }
+            } else {
+                let mut not_done_todos: Vec<&todo::Todo> = vec![];
+                let mut done_todos: Vec<&todo::Todo> = vec![];
+                for todo in &parsed_todos {
+                    if todo.is_done() {
+                        done_todos.push(todo);
+                    } else {
+                        not_done_todos.push(todo);
+                    }
+                }
+                if done_todos.len() > 0 {
+                    println!("--- DONE ---");
+                    for todo in &done_todos {
+                        println!("{}", todo);
+                    }
+                }
+                if not_done_todos.len() > 0 {
+                    println!("--- NOT DONE ---");
+                    for todo in &not_done_todos {
+                        println!("{}", todo);
+                    }
+                }
+            }
+        }
+        "add" => {
+            println!("Adding new ToDo!")
+        }
+        "complete" => {
+            println!("Completing a ToDo")
+        }
+        "not-complete" => {
+            println!("ToDo is not done!")
+        }
+        _ => println!("Not recognized command! Try something else!"),
+    }
 }
 
 fn parse_json(input: &String) -> serde_json::Result<std::vec::Vec<todo::Todo>> {
@@ -59,6 +119,12 @@ fn create_file(dir_path: path::PathBuf) -> Result<path::PathBuf, std::io::Error>
         file.write("[]".as_bytes())?;
     }
 
+    Ok(path)
+}
+
+fn get_todo_file_path() -> Result<path::PathBuf, std::io::Error> {
+    let dir_path = create_dir()?;
+    let path = create_file(dir_path)?;
     Ok(path)
 }
 

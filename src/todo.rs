@@ -19,6 +19,10 @@ impl Todo {
     pub fn complete(&mut self) {
         self.done = true;
     }
+
+    pub fn is_done(&self) -> bool {
+        self.done
+    }
 }
 
 impl fmt::Display for Todo {
